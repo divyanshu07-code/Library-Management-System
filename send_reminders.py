@@ -17,7 +17,6 @@ Requires environment variables:
     SENDER_EMAIL       - the "from" address (must be a verified sender in SendGrid)
     REMINDER_DAYS_BEFORE (optional) - how many days before the due date to remind. Default: 2
 """
-
 import os
 import sqlite3
 from datetime import datetime, timedelta
