@@ -111,9 +111,4 @@ git push -u origin main
 
 Replace `<your-username>/<your-repo-name>` with your GitHub username and a repository you create on github.com (click **New repository**, and don't initialize it with a README so there's no merge conflict).
 
-## Notes
-- `app.secret_key` in `app.py` is a placeholder — change it before deploying anywhere public.
-- `library.db` is git-ignored so your database won't be committed; each fresh clone starts empty.
-- To reset the database at any time, just delete `library.db` and restart the app.
 
-If you like this project, consider giving it a ⭐ and sharing your feedback.
