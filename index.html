@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Library MS{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+<div class="stats-grid">
+    <div class="stat-card">
+        <h2>{{ total_books }}</h2>
+        <p>Total Book Copies</p>
+    </div>
+    <div class="stat-card">
+        <h2>{{ available_books }}</h2>
+        <p>Available Copies</p>
+    </div>
+    <div class="stat-card">
+        <h2>{{ total_members }}</h2>
+        <p>Registered Members</p>
+    </div>
+    <div class="stat-card">
+        <h2>{{ active_issues }}</h2>
+        <p>Books Currently Issued</p>
+    </div>
+</div>
+
+<div class="quick-links">
+    <a class="btn" href="{{ url_for('add_book') }}">+ Add Book</a>
+    <a class="btn" href="{{ url_for('add_member') }}">+ Add Member</a>
+    <a class="btn" href="{{ url_for('issue_book') }}">+ Issue Book</a>
+</div>
+
+<div class="charts-grid">
+    <div class="chart-card">
+        <h3>Most Borrowed Books</h3>
+        {% if top_books_labels %}
+            <canvas id="topBooksChart"></canvas>
+        {% else %}
+            <p class="empty-note">No issue history yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="chart-card">
+        <h3>Busiest Months (books issued)</h3>
+        {% if monthly_labels %}
+            <canvas id="monthlyChart"></canvas>
+        {% else %}
+            <p class="empty-note">No issue history yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="chart-card">
+        <h3>Overdue vs On-Time (active loans)</h3>
+        {% if active_issues > 0 %}
+            <canvas id="overdueChart"></canvas>
+        {% else %}
+            <p class="empty-note">No active loans right now.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+    const topBooksLabels = {{ top_books_labels | tojson }};
+    const topBooksCounts = {{ top_books_counts | tojson }};
+    const monthlyLabels = {{ monthly_labels | tojson }};
+    const monthlyCounts = {{ monthly_counts | tojson }};
+    const overdueCount = {{ overdue_count }};
+    const onTimeCount = {{ on_time_count }};
+
+    const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--border');
+    const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text');
+
+    if (topBooksLabels.length) {
+        new Chart(document.getElementById('topBooksChart'), {
+            type: 'bar',
+            data: {
+                labels: topBooksLabels,
+                datasets: [{
+                    label: 'Times Borrowed',
+                    data: topBooksCounts,
+                    backgroundColor: '#2f5d50'
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } },
+                    y: { ticks: { color: textColor }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    if (monthlyLabels.length) {
+        new Chart(document.getElementById('monthlyChart'), {
+            type: 'line',
+            data: {
+                labels: monthlyLabels,
+                datasets: [{
+                    label: 'Books Issued',
+                    data: monthlyCounts,
+                    borderColor: '#2f5d50',
+                    backgroundColor: 'rgba(47, 93, 80, 0.15)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                    y: { ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }
+                }
+            }
+        });
+    }
+
+    if (overdueCount + onTimeCount > 0) {
+        new Chart(document.getElementById('overdueChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Overdue', 'On Time'],
+                datasets: [{
+                    data: [overdueCount, onTimeCount],
+                    backgroundColor: ['#b3261e', '#2e7d32']
+                }]
+            },
+            options: {
+                plugins: { legend: { position: 'bottom', labels: { color: textColor } } }
+            }
+        });
+    }
+</script>
+{% endblock %}

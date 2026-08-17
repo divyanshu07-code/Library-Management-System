@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit" if book else "Add" }} Book - Library MS{% endblock %}
+{% block content %}
+<h1>{{ "Edit" if book else "Add" }} Book</h1>
+<form class="form" id="bookForm" method="post">
+    <label>Title
+        <input type="text" name="title" id="titleInput" required value="{{ book.title if book else '' }}">
+    </label>
+    <label>Author
+        <input type="text" name="author" id="authorInput" required value="{{ book.author if book else '' }}">
+    </label>
+    <label>ISBN
+        <div class="scan-row">
+            <input type="text" name="isbn" id="isbnInput" value="{{ book.isbn if book else '' }}">
+            {% if not book %}
+            <button type="button" class="btn btn-secondary" id="scanBtn">📷 Scan Barcode</button>
+            {% endif %}
+        </div>
+    </label>
+    {% if not book %}
+    <div id="scannerBox" style="display:none;"></div>
+    <p id="scanStatus" class="empty-note"></p>
+    {% endif %}
+    <label>Quantity
+        <input type="number" name="quantity" min="1" required value="{{ book.quantity if book else 1 }}">
+    </label>
+    <button class="btn" type="submit">Save</button>
+    <a class="btn btn-secondary" href="{{ url_for('books') }}">Cancel</a>
+</form>
+{% endblock %}
+
+{% block scripts %}
+{% if not book %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script>
+    const scanBtn = document.getElementById('scanBtn');
+    const scannerBox = document.getElementById('scannerBox');
+    const scanStatus = document.getElementById('scanStatus');
+    const isbnInput = document.getElementById('isbnInput');
+    const titleInput = document.getElementById('titleInput');
+    const authorInput = document.getElementById('authorInput');
+    let scanner = null;
+    let scanning = false;
+
+    scanBtn.addEventListener('click', function () {
+        if (scanning) {
+            stopScanner();
+            return;
+        }
+        scannerBox.style.display = 'block';
+        scanStatus.textContent = 'Requesting camera access...';
+        scanBtn.textContent = '✖ Stop Scanning';
+        scanning = true;
+
+        scanner = new Html5Qrcode('scannerBox');
+        scanner.start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: { width: 250, height: 120 } },
+            function onScanSuccess(decodedText) {
+                isbnInput.value = decodedText;
+                scanStatus.textContent = 'Scanned ISBN: ' + decodedText + ' — looking up book info...';
+                lookupIsbn(decodedText);
+                stopScanner();
+            },
+            function onScanFailure() { /* ignore per-frame failures */ }
+        ).catch(function (err) {
+            scanStatus.textContent = 'Camera error: ' + err + ' (camera access needs HTTPS or localhost).';
+            scanning = false;
+            scanBtn.textContent = '📷 Scan Barcode';
+        });
+    });
+
+    function stopScanner() {
+        if (scanner && scanning) {
+            scanner.stop().then(function () {
+                scannerBox.style.display = 'none';
+                scanBtn.textContent = '📷 Scan Barcode';
+                scanning = false;
+            }).catch(function () {
+                scanning = false;
+                scanBtn.textContent = '📷 Scan Barcode';
+            });
+        }
+    }
+
+    function lookupIsbn(isbn) {
+        fetch('/api/lookup-isbn/' + encodeURIComponent(isbn))
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.found) {
+                    if (data.title) titleInput.value = data.title;
+                    if (data.author) authorInput.value = data.author;
+                    scanStatus.textContent = 'Found: ' + data.title;
+                } else {
+                    scanStatus.textContent = 'ISBN scanned, but no match found online — fill in title/author manually.';
+                }
+            })
+            .catch(function () {
+                scanStatus.textContent = 'ISBN scanned. Lookup service unavailable — fill in details manually.';
+            });
+    }
+</script>
+{% endif %}
+{% endblock %}

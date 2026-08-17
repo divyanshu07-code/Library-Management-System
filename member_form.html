@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Add Member - Library MS{% endblock %}
+{% block content %}
+<h1>Add Member</h1>
+<form class="form" method="post">
+    <label>Name
+        <input type="text" name="name" required>
+    </label>
+    <label>Email
+        <input type="email" name="email" required>
+    </label>
+    <label>Phone
+        <input type="text" name="phone">
+    </label>
+    <button class="btn" type="submit">Save</button>
+    <a class="btn btn-secondary" href="{{ url_for('members') }}">Cancel</a>
+</form>
+{% endblock %}

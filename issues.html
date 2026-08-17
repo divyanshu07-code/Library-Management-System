@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Issues - Library MS{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Issued Books</h1>
+    <a class="btn" href="{{ url_for('issue_book') }}">+ Issue Book</a>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Book</th>
+            <th>Member</th>
+            <th>Issue Date</th>
+            <th>Due Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in issues %}
+        <tr>
+            <td>{{ row.book_title }}</td>
+            <td>{{ row.member_name }}</td>
+            <td>{{ row.issue_date }}</td>
+            <td>{{ row.due_date }}</td>
+            <td>
+                {% if row.return_date %}
+                    Returned on {{ row.return_date }}
+                {% elif row.due_date < today.isoformat() %}
+                    <span class="badge badge-danger">Overdue</span>
+                {% else %}
+                    <span class="badge badge-success">Issued</span>
+                {% endif %}
+            </td>
+            <td class="actions">
+                {% if not row.return_date %}
+                <form method="post" action="{{ url_for('return_book', issue_id=row.id) }}">
+                    <button type="submit" class="link-btn">Mark Returned</button>
+                </form>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">No issue records found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
