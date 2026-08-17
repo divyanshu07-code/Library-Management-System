@@ -374,9 +374,6 @@ def return_book(issue_id):
     conn.close()
     return redirect(url_for("issues"))
 
-
-# Ensure the database/tables exist whether this module is run directly
-# (python app.py) or imported by a WSGI server (gunicorn app:app).
 init_db()
 seed_books()
 
