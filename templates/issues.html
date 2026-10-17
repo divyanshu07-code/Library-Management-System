@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Book Issues & Fines - Library OS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>🔄 Issued Books & Fine Management</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+            Track active circulation, manage returns, compute overdue fines, and extend renewals
+        </p>
+    </div>
+    <div class="quick-links" style="margin-bottom: 0;">
+        <form method="post" action="{{ url_for('trigger_reminders_now') }}" style="display:inline;">
+            <button class="btn btn-secondary" type="submit" title="Check and dispatch due date email alerts">
+                📩 Run Reminder Job
+            </button>
+        </form>
+        <a class="btn btn-secondary" href="{{ url_for('export_issues_csv') }}">📥 Export CSV</a>
+        <a class="btn" href="{{ url_for('issue_book') }}">+ Issue Book</a>
+    </div>
+</div>
+
+<!-- Search & Status Filter -->
+<form class="search-form" method="get" action="{{ url_for('issues') }}">
+    <input type="text" name="q" placeholder="Search by book title, member name, or email..." value="{{ search }}">
+    
+    <select name="status" onchange="this.form.submit()">
+        <option value="all" {{ 'selected' if status_filter == 'all' else '' }}>All Loan Records</option>
+        <option value="active" {{ 'selected' if status_filter == 'active' else '' }}>Active Loans Only</option>
+        <option value="overdue" {{ 'selected' if status_filter == 'overdue' else '' }}>Overdue Only</option>
+        <option value="returned" {{ 'selected' if status_filter == 'returned' else '' }}>Returned Loans</option>
+    </select>
+
+    <button class="btn" type="submit">Filter</button>
+    {% if search or status_filter != 'all' %}
+    <a href="{{ url_for('issues') }}" class="btn btn-secondary">Clear</a>
+    {% endif %}
+</form>
+
+<!-- Issues Table -->
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Book</th>
+                <th>Member</th>
+                <th>Issue Date</th>
+                <th>Due Date</th>
+                <th>Status & Fines</th>
+                <th style="text-align: right;">Circulation Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in issues %}
+            <tr>
+                <td>
+                    <strong>{{ row.book_title }}</strong>
+                    {% if row.book_isbn %}
+                    <div style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">
+                        ISBN: {{ row.book_isbn }}
+                    </div>
+                    {% endif %}
+                </td>
+                <td>
+                    <strong>{{ row.member_name }}</strong>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">{{ row.member_email }}</div>
+                </td>
+                <td>{{ row.issue_date }}</td>
+                <td>
+                    <strong>{{ row.due_date }}</strong>
+                    {% if row.renewal_count > 0 %}
+                    <span style="font-size: 0.75rem; color: var(--accent); display: block;">
+                        (Renewed {{ row.renewal_count }}x)
+                    </span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if row.return_date %}
+                        <span class="badge badge-neutral">Returned {{ row.return_date }}</span>
+                        {% if row.fine_amount > 0 %}
+                            <span class="badge badge-warning" style="margin-left: 4px;">
+                                Fine: ${{ "%.2f"|format(row.fine_amount) }} (Paid)
+                            </span>
+                        {% endif %}
+                    {% elif row.is_overdue %}
+                        <span class="badge badge-danger">
+                            ⚠️ Overdue ({{ row.overdue_days }}d)
+                        </span>
+                        {% if row.current_fine > 0 %}
+                            <span class="badge badge-danger" style="margin-top: 4px; display: inline-flex;">
+                                Due Fine: ${{ "%.2f"|format(row.current_fine) }}
+                            </span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge badge-success">Active Loan</span>
+                    {% endif %}
+                </td>
+                <td style="text-align: right;">
+                    <div class="actions" style="justify-content: flex-end;">
+                        {% if not row.return_date %}
+                            <!-- Renew Button -->
+                            <form method="post" action="{{ url_for('renew_book', issue_id=row.id) }}" style="display:inline;">
+                                <input type="hidden" name="extend_days" value="7">
+                                <button type="submit" class="btn btn-secondary btn-sm" title="Extend loan period by 7 days">
+                                    🔄 Renew (+7d)
+                                </button>
+                            </form>
+
+                            <!-- Return Button -->
+                            <form method="post" action="{{ url_for('return_book', issue_id=row.id) }}"
+                                  onsubmit="return confirm('Confirm return of &quot;{{ row.book_title }}&quot;?');"
+                                  style="display:inline;">
+                                <button type="submit" class="btn btn-sm">
+                                    Mark Returned
+                                </button>
+                            </form>
+                        {% else %}
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">Completed</span>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="empty-note">
+                    No circulation records found. <a href="{{ url_for('issue_book') }}">Issue a book now</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

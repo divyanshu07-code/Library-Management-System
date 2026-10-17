@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Issue Book - Library OS{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <div style="margin-bottom: 1.5rem;">
+        <h1>📖 Issue Book to Member</h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+            Assign an available copy to a registered member with a specified loan period.
+        </p>
+    </div>
+
+    <form class="form" method="post">
+        <label>
+            Select Book *
+            <select name="book_id" required>
+                <option value="" disabled selected>— Choose an available title —</option>
+                {% for book in books %}
+                <option value="{{ book.id }}">
+                    {{ book.title }} by {{ book.author }} ({{ book.available }} available)
+                </option>
+                {% endfor %}
+            </select>
+            {% if not books %}
+            <span style="color: var(--danger); font-size: 0.8rem; margin-top: 0.25rem;">
+                No books currently available in stock. <a href="{{ url_for('add_book') }}">Add books</a>
+            </span>
+            {% endif %}
+        </label>
+
+        <label>
+            Select Member *
+            <select name="member_id" required>
+                <option value="" disabled selected>— Choose a registered member —</option>
+                {% for member in members %}
+                <option value="{{ member.id }}">
+                    {{ member.name }} ({{ member.email }})
+                </option>
+                {% endfor %}
+            </select>
+            {% if not members %}
+            <span style="color: var(--danger); font-size: 0.8rem; margin-top: 0.25rem;">
+                No members found. <a href="{{ url_for('add_member') }}">Add a member</a> first.
+            </span>
+            {% endif %}
+        </label>
+
+        <label>
+            Loan Period (Days) *
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="number" name="days" id="daysInput" min="1" max="90" value="14" required style="max-width: 140px;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('daysInput').value = 7;">7 Days</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('daysInput').value = 14;">14 Days</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('daysInput').value = 30;">30 Days</button>
+            </div>
+        </label>
+
+        <div class="form-actions">
+            <button class="btn" type="submit" {{ 'disabled' if not books or not members else '' }}>
+                Confirm & Issue Book
+            </button>
+            <a class="btn btn-secondary" href="{{ url_for('issues') }}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

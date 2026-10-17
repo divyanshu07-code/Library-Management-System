@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Library OS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Dashboard</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+            Real-time analytics, circulation metrics, and library inventory status
+        </p>
+    </div>
+    <div class="quick-links" style="margin-bottom: 0;">
+        <a class="btn" href="{{ url_for('add_book') }}">+ Add Book</a>
+        <a class="btn btn-secondary" href="{{ url_for('issue_book') }}">📖 Issue Book</a>
+        <form method="post" action="{{ url_for('trigger_reminders_now') }}" style="display:inline;">
+            <button class="btn btn-secondary" type="submit" title="Send due date email notifications to members">
+                📩 Run Reminder Job
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Key Performance Indicators -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <h2>{{ total_books }}</h2>
+        <p>Total Book Copies</p>
+        <span class="stat-icon">📚</span>
+    </div>
+    <div class="stat-card">
+        <h2>{{ available_books }}</h2>
+        <p>Available on Shelves</p>
+        <span class="stat-icon">✅</span>
+    </div>
+    <div class="stat-card">
+        <h2>{{ total_members }}</h2>
+        <p>Registered Members</p>
+        <span class="stat-icon">👥</span>
+    </div>
+    <div class="stat-card">
+        <h2>{{ active_issues }}</h2>
+        <p>Books Currently Issued</p>
+        <span class="stat-icon">🔄</span>
+    </div>
+    <div class="stat-card">
+        <h2 style="color: {{ 'var(--danger)' if overdue_count > 0 else 'var(--text)' }};">{{ overdue_count }}</h2>
+        <p>Overdue Loans</p>
+        <span class="stat-icon">⚠️</span>
+    </div>
+    <div class="stat-card">
+        <h2>${{ total_fines_collected }}</h2>
+        <p>Fines Collected</p>
+        <span class="stat-icon">💰</span>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="charts-grid">
+    <div class="chart-card">
+        <h3>📊 Most Borrowed Books</h3>
+        {% if top_books_labels %}
+            <canvas id="topBooksChart"></canvas>
+        {% else %}
+            <p class="empty-note">No issue history yet to generate charts.</p>
+        {% endif %}
+    </div>
+
+    <div class="chart-card">
+        <h3>📈 Monthly Borrowing Trends</h3>
+        {% if monthly_labels %}
+            <canvas id="monthlyChart"></canvas>
+        {% else %}
+            <p class="empty-note">No issue records recorded yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="chart-card">
+        <h3>⏱️ Loan Status (Active Loans)</h3>
+        {% if active_issues > 0 %}
+            <canvas id="overdueChart"></canvas>
+        {% else %}
+            <p class="empty-note">All issued books have been returned. No active loans!</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent Transactions Feed -->
+<div class="section-card">
+    <div class="section-card-header">
+        <h3>🕒 Recent Activity & Circulation</h3>
+        <a href="{{ url_for('issues') }}" class="btn btn-secondary btn-sm">View All Issues &rarr;</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Book</th>
+                    <th>Member</th>
+                    <th>Issued Date</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in recent_activity %}
+                <tr>
+                    <td><strong>{{ item.book_title }}</strong></td>
+                    <td>{{ item.member_name }}</td>
+                    <td>{{ item.issue_date }}</td>
+                    <td>{{ item.due_date }}</td>
+                    <td>
+                        {% if item.return_date %}
+                            <span class="badge badge-neutral">Returned ({{ item.return_date }})</span>
+                        {% elif item.due_date < today.isoformat() %}
+                            <span class="badge badge-danger">Overdue</span>
+                        {% else %}
+                            <span class="badge badge-success">Active Loan</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="empty-note">No circulation history found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+    (function() {
+        const topBooksLabels = {{ top_books_labels | tojson }};
+        const topBooksCounts = {{ top_books_counts | tojson }};
+        const monthlyLabels = {{ monthly_labels | tojson }};
+        const monthlyCounts = {{ monthly_counts | tojson }};
+        const overdueCount = {{ overdue_count }};
+        const onTimeCount = {{ on_time_count }};
+
+        let topChart, monthlyChart, statusChart;
+
+        function renderCharts() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#94a3b8' : '#64748b';
+            const gridColor = isDark ? '#1f293d' : '#e2e8f0';
+
+            // Top Books Chart
+            const topCtx = document.getElementById('topBooksChart');
+            if (topCtx && topBooksLabels.length) {
+                if (topChart) topChart.destroy();
+                topChart = new Chart(topCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: topBooksLabels,
+                        datasets: [{
+                            label: 'Times Borrowed',
+                            data: topBooksCounts,
+                            backgroundColor: '#059669',
+                            borderRadius: 6,
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { padding: 10, cornerRadius: 8 }
+                        },
+                        scales: {
+                            x: { ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } },
+                            y: { ticks: { color: textColor }, grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            // Monthly Trend Chart
+            const monthlyCtx = document.getElementById('monthlyChart');
+            if (monthlyCtx && monthlyLabels.length) {
+                if (monthlyChart) monthlyChart.destroy();
+                monthlyChart = new Chart(monthlyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: monthlyLabels,
+                        datasets: [{
+                            label: 'Books Issued',
+                            data: monthlyCounts,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0.35,
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { padding: 10, cornerRadius: 8 }
+                        },
+                        scales: {
+                            x: { ticks: { color: textColor }, grid: { display: false } },
+                            y: { ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }
+                        }
+                    }
+                });
+            }
+
+            // Overdue Doughnut Chart
+            const overdueCtx = document.getElementById('overdueChart');
+            if (overdueCtx && (overdueCount + onTimeCount > 0)) {
+                if (statusChart) statusChart.destroy();
+                statusChart = new Chart(overdueCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['On-Time', 'Overdue'],
+                        datasets: [{
+                            data: [onTimeCount, overdueCount],
+                            backgroundColor: ['#10b981', '#ef4444'],
+                            borderWidth: 0,
+                            hoverOffset: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: textColor, font: { weight: 600 } }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        renderCharts();
+        window.addEventListener('themechange', renderCharts);
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit" if book else "Add New" }} Book - Library OS{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <div style="margin-bottom: 1.5rem;">
+        <h1>{{ "✏️ Edit" if book else "📖 Add New" }} Book</h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+            Enter book catalog details or use ISBN scanner to autofill metadata.
+        </p>
+    </div>
+
+    <form class="form" id="bookForm" method="post">
+        <!-- ISBN and Scanner Section -->
+        <label>
+            ISBN (10 or 13 digits)
+            <div class="scan-row">
+                <input type="text" name="isbn" id="isbnInput" placeholder="e.g. 9780141439518" value="{{ book.isbn if book else '' }}">
+                <button type="button" class="btn btn-secondary" id="lookupBtn" title="Fetch metadata via OpenLibrary">
+                    🔍 Lookup
+                </button>
+                {% if not book %}
+                <button type="button" class="btn btn-secondary" id="scanBtn">
+                    📷 Scan Barcode
+                </button>
+                {% endif %}
+            </div>
+        </label>
+
+        {% if not book %}
+        <div id="scannerBox" style="display:none;"></div>
+        <p id="scanStatus" class="empty-note" style="padding: 0.25rem 0;"></p>
+        {% endif %}
+
+        <div id="coverPreviewBox" style="display:none; text-align: center; margin: 0.5rem 0;">
+            <img id="coverPreviewImg" src="" alt="Book Cover" style="max-height: 140px; border-radius: 6px; box-shadow: var(--shadow-sm);">
+        </div>
+
+        <label>
+            Book Title *
+            <input type="text" name="title" id="titleInput" required placeholder="e.g. 1984" value="{{ book.title if book else '' }}">
+        </label>
+
+        <label>
+            Author *
+            <input type="text" name="author" id="authorInput" required placeholder="e.g. George Orwell" value="{{ book.author if book else '' }}">
+        </label>
+
+        <label>
+            Category / Genre
+            <input type="text" name="category" id="categoryInput" list="categorySuggestions" placeholder="e.g. Science, Fiction, Classic..." value="{{ book.category if book else 'General' }}">
+            <datalist id="categorySuggestions">
+                <option value="Fiction">
+                <option value="Non-Fiction">
+                <option value="Science">
+                <option value="Technology">
+                <option value="Classic">
+                <option value="History">
+                <option value="Fantasy">
+                <option value="Biography">
+                <option value="Philosophy">
+                <option value="Self-Help">
+            </datalist>
+        </label>
+
+        <label>
+            Total Copies (Quantity) *
+            <input type="number" name="quantity" min="1" required value="{{ book.quantity if book else 1 }}">
+        </label>
+
+        <div class="form-actions">
+            <button class="btn" type="submit">Save Book</button>
+            <a class="btn btn-secondary" href="{{ url_for('books') }}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script>
+    (function() {
+        const scanBtn = document.getElementById('scanBtn');
+        const lookupBtn = document.getElementById('lookupBtn');
+        const scannerBox = document.getElementById('scannerBox');
+        const scanStatus = document.getElementById('scanStatus');
+        const isbnInput = document.getElementById('isbnInput');
+        const titleInput = document.getElementById('titleInput');
+        const authorInput = document.getElementById('authorInput');
+        const coverBox = document.getElementById('coverPreviewBox');
+        const coverImg = document.getElementById('coverPreviewImg');
+
+        let scanner = null;
+        let scanning = false;
+
+        function lookupIsbn(isbn) {
+            isbn = isbn.trim().replace(/[^0-9X]/gi, '');
+            if (!isbn) {
+                if (scanStatus) scanStatus.textContent = 'Please enter an ISBN first.';
+                return;
+            }
+            if (scanStatus) scanStatus.textContent = 'Fetching book information from Open Library...';
+
+            fetch('/api/lookup-isbn/' + encodeURIComponent(isbn))
+                .then(r => r.json())
+                .then(data => {
+                    if (data.found) {
+                        if (data.title) titleInput.value = data.title;
+                        if (data.author) authorInput.value = data.author;
+                        if (data.cover_url) {
+                            coverImg.src = data.cover_url;
+                            coverBox.style.display = 'block';
+                        }
+                        if (scanStatus) scanStatus.textContent = 'Found: ' + data.title + ' by ' + data.author;
+                    } else {
+                        if (scanStatus) scanStatus.textContent = 'No online metadata found for this ISBN. You can enter details manually.';
+                    }
+                })
+                .catch(() => {
+                    if (scanStatus) scanStatus.textContent = 'Lookup service unavailable. Enter details manually.';
+                });
+        }
+
+        if (lookupBtn) {
+            lookupBtn.addEventListener('click', function() {
+                lookupIsbn(isbnInput.value);
+            });
+        }
+
+        if (scanBtn) {
+            scanBtn.addEventListener('click', function () {
+                if (scanning) {
+                    stopScanner();
+                    return;
+                }
+                scannerBox.style.display = 'block';
+                scanStatus.textContent = 'Requesting camera permissions...';
+                scanBtn.textContent = '✖ Stop Camera';
+                scanning = true;
+
+                scanner = new Html5Qrcode('scannerBox');
+                scanner.start(
+                    { facingMode: 'environment' },
+                    { fps: 10, qrbox: { width: 250, height: 120 } },
+                    function onScanSuccess(decodedText) {
+                        isbnInput.value = decodedText;
+                        scanStatus.textContent = 'Scanned ISBN: ' + decodedText + '. Looking up book info...';
+                        lookupIsbn(decodedText);
+                        stopScanner();
+                    },
+                    function onScanFailure() { /* ignore continuous stream */ }
+                ).catch(function (err) {
+                    scanStatus.textContent = 'Camera error: ' + err + ' (Camera requires localhost or HTTPS).';
+                    stopScanner();
+                });
+            });
+
+            function stopScanner() {
+                if (scanner && scanning) {
+                    scanner.stop().then(() => {
+                        scannerBox.style.display = 'none';
+                        scanBtn.textContent = '📷 Scan Barcode';
+                        scanning = false;
+                    }).catch(() => {
+                        scannerBox.style.display = 'none';
+                        scanBtn.textContent = '📷 Scan Barcode';
+                        scanning = false;
+                    });
+                }
+            }
+        }
+    })();
+</script>
+{% endblock %}

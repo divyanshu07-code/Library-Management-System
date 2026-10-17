@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Members Directory - Library OS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>👥 Members Directory</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+            Manage patron registrations, borrowing privileges, and contact records
+        </p>
+    </div>
+    <div class="quick-links" style="margin-bottom: 0;">
+        <a class="btn btn-secondary" href="{{ url_for('export_members_csv') }}">📥 Export CSV</a>
+        <a class="btn" href="{{ url_for('add_member') }}">+ Add New Member</a>
+    </div>
+</div>
+
+<!-- Search Form -->
+<form class="search-form" method="get" action="{{ url_for('members') }}">
+    <input type="text" name="q" placeholder="Search members by name, email, or phone..." value="{{ search }}">
+    <button class="btn" type="submit">Search</button>
+    {% if search %}
+    <a href="{{ url_for('members') }}" class="btn btn-secondary">Clear</a>
+    {% endif %}
+</form>
+
+<!-- Members Table -->
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Member Name</th>
+                <th>Contact Email</th>
+                <th>Phone</th>
+                <th>Active Loans</th>
+                <th>Lifetime Borrowed</th>
+                <th style="text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for member in members %}
+            <tr>
+                <td><strong>{{ member.name }}</strong></td>
+                <td>
+                    <a href="mailto:{{ member.email }}" style="color: var(--text-muted);">{{ member.email }}</a>
+                </td>
+                <td>{{ member.phone or "—" }}</td>
+                <td>
+                    {% if member.active_loans > 0 %}
+                        <span class="badge badge-warning">{{ member.active_loans }} active</span>
+                    {% else %}
+                        <span class="badge badge-neutral">0 active</span>
+                    {% endif %}
+                </td>
+                <td>{{ member.total_borrowed }} books</td>
+                <td style="text-align: right;">
+                    <div class="actions" style="justify-content: flex-end;">
+                        <form method="post" action="{{ url_for('delete_member', member_id=member.id) }}"
+                              onsubmit="return confirm('Delete member &quot;{{ member.name }}&quot;? All member history will be removed.');"
+                              style="display:inline;">
+                            <button type="submit" class="link-btn" {{ 'disabled title="Cannot delete member with active loans"' if member.active_loans > 0 else '' }}>
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="empty-note">
+                    No members found. <a href="{{ url_for('members') }}">Clear search</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

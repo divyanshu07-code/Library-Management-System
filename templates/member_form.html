@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Add Member - Library OS{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <div style="margin-bottom: 1.5rem;">
+        <h1>👤 Add New Member</h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+            Register a new library patron to grant borrowing access.
+        </p>
+    </div>
+
+    <form class="form" method="post">
+        <label>
+            Full Name *
+            <input type="text" name="name" required placeholder="e.g. John Doe">
+        </label>
+
+        <label>
+            Email Address *
+            <input type="email" name="email" required placeholder="e.g. john.doe@example.com">
+        </label>
+
+        <label>
+            Phone Number (Optional)
+            <input type="text" name="phone" placeholder="e.g. +1 555-0199">
+        </label>
+
+        <div class="form-actions">
+            <button class="btn" type="submit">Register Member</button>
+            <a class="btn btn-secondary" href="{{ url_for('members') }}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

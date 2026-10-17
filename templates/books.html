@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Books Catalog - Library OS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>📚 Book Catalog</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+            Manage collection inventory, stock availability, and catalog metadata
+        </p>
+    </div>
+    <div class="quick-links" style="margin-bottom: 0;">
+        <a class="btn btn-secondary" href="{{ url_for('export_books_csv') }}">📥 Export CSV</a>
+        <a class="btn" href="{{ url_for('add_book') }}">+ Add New Book</a>
+    </div>
+</div>
+
+<!-- Search and Filter Controls -->
+<form class="search-form" method="get" action="{{ url_for('books') }}">
+    <input type="text" name="q" placeholder="Search by title, author, ISBN, or genre..." value="{{ search }}">
+    
+    <select name="category" onchange="this.form.submit()">
+        <option value="all" {{ 'selected' if category_filter == 'all' else '' }}>All Categories</option>
+        {% for cat in categories %}
+        <option value="{{ cat }}" {{ 'selected' if category_filter == cat else '' }}>{{ cat }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="status" onchange="this.form.submit()">
+        <option value="all" {{ 'selected' if status_filter == 'all' else '' }}>All Availability</option>
+        <option value="available" {{ 'selected' if status_filter == 'available' else '' }}>Available Only (&gt;0)</option>
+        <option value="borrowed" {{ 'selected' if status_filter == 'borrowed' else '' }}>Currently Borrowed</option>
+        <option value="outofstock" {{ 'selected' if status_filter == 'outofstock' else '' }}>Out of Stock (0)</option>
+    </select>
+
+    <button class="btn" type="submit">Filter</button>
+    {% if search or category_filter != 'all' or status_filter != 'all' %}
+    <a href="{{ url_for('books') }}" class="btn btn-secondary">Clear</a>
+    {% endif %}
+</form>
+
+<!-- Books Data Table -->
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title & Author</th>
+                <th>ISBN</th>
+                <th>Category</th>
+                <th>Stock Availability</th>
+                <th>Status</th>
+                <th style="text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for book in books %}
+            <tr>
+                <td>
+                    <strong>{{ book.title }}</strong>
+                    <div style="font-size: 0.825rem; color: var(--text-muted);">by {{ book.author }}</div>
+                </td>
+                <td>
+                    <code style="font-family: var(--font-mono); font-size: 0.825rem; background: var(--surface-hover); padding: 2px 6px; border-radius: 4px;">
+                        {{ book.isbn or "—" }}
+                    </code>
+                </td>
+                <td>
+                    <span class="badge badge-neutral">{{ book.category }}</span>
+                </td>
+                <td>
+                    <strong>{{ book.available }}</strong> / {{ book.quantity }} copies
+                </td>
+                <td>
+                    {% if book.available == 0 %}
+                        <span class="badge badge-danger">Out of Stock</span>
+                    {% elif book.available < book.quantity %}
+                        <span class="badge badge-warning">Partially Issued</span>
+                    {% else %}
+                        <span class="badge badge-success">Available</span>
+                    {% endif %}
+                </td>
+                <td style="text-align: right;">
+                    <div class="actions" style="justify-content: flex-end;">
+                        <a href="{{ url_for('edit_book', book_id=book.id) }}" class="link-btn link-btn-primary">Edit</a>
+                        <form method="post" action="{{ url_for('delete_book', book_id=book.id) }}"
+                              onsubmit="return confirm('Are you sure you want to delete &quot;{{ book.title }}&quot;?');" style="display:inline;">
+                            <button type="submit" class="link-btn">Delete</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="empty-note">
+                    No books matched your criteria. <a href="{{ url_for('books') }}">Reset search filters</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
