@@ -32,7 +32,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-library-secret-key-2026")
 DB_PATH = os.path.join(os.path.dirname(__file__), "library.db")
 
-DAILY_FINE_RATE = float(os.environ.get("DAILY_FINE_RATE", 0.50))  # Currency units per day
+DAILY_FINE_RATE = float(os.environ.get("DAILY_FINE_RATE", 5.0))  # Currency units per day
 
 
 # ==============================================================================
@@ -193,7 +193,7 @@ def seed_books():
             conn.execute(
                 "INSERT INTO issues (book_id, member_id, issue_date, due_date, return_date, fine_amount, fine_paid) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (book3["id"], member1["id"], issue_d, due_d, ret_d, 1.0, 1),
+                (book3["id"], member1["id"], issue_d, due_d, ret_d, 15.0, 1),
             )
 
         conn.commit()
@@ -708,7 +708,7 @@ def return_book(issue_id):
     conn.close()
 
     if fine > 0:
-        flash(f"Book returned. Overdue by {days_overdue} days. Fine of ${fine:.2f} marked as collected.", "warning")
+        flash(f"Book returned. Overdue by {days_overdue} days. Fine of ₹{fine:.2f} marked as collected.", "warning")
     else:
         flash("Book successfully returned on time!", "success")
 
@@ -781,7 +781,7 @@ def export_issues_csv():
         writer.writerow([
             r["id"], r["book_title"], r["isbn"] or "N/A", r["member_name"], r["member_email"],
             r["issue_date"], r["due_date"], r["return_date"] or "Pending",
-            status, f"${r['fine_amount']:.2f}", "Yes" if r["fine_paid"] else "No", r["renewal_count"]
+            status, f"₹{r['fine_amount']:.2f}", "Yes" if r["fine_paid"] else "No", r["renewal_count"]
         ])
 
     return Response(

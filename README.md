@@ -1,10 +1,13 @@
 # 📚 Library Management System (LibraryOS)
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Render-00c7b7.svg?style=for-the-badge&logo=render)](https://library-management-system-1-4v7z.onrender.com/)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.0%2B-green.svg)](https://flask.palletsprojects.com/)
 [![SQLite](https://img.shields.io/badge/Database-SQLite3-lightgrey.svg)](https://www.sqlite.org/)
 [![Chart.js](https://img.shields.io/badge/Visualizations-Chart.js_4-orange.svg)](https://www.chartjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+> 🚀 **Live Production App**: [https://library-management-system-1-4v7z.onrender.com/](https://library-management-system-1-4v7z.onrender.com/)
 
 A modern, full-featured **Library Management System** engineered with **Python, Flask, and SQLite3**. Features dynamic circulation tracking, automatic overdue fine calculations, one-click loan renewals, barcode/ISBN scanning with OpenLibrary metadata synchronization, interactive Chart.js analytics, automated email reminder scheduling, and instant CSV reporting.
 
@@ -121,7 +124,7 @@ Open **http://127.0.0.1:5000** in your browser.
 |---|---|---|---|
 | `SECRET_KEY` | Production | `dev-library-secret-key-2026` | Flask session and flash messaging signing key |
 | `PORT` | Auto by Host | `5000` | Port for the web server to listen on |
-| `DAILY_FINE_RATE` | Optional | `0.50` | Overdue fee rate per day |
+| `DAILY_FINE_RATE` | Optional | `5.0` | Overdue fee rate per day |
 | `SENDGRID_API_KEY`| Optional | — | SendGrid API key for automated reminder dispatch |
 | `SENDER_EMAIL` | Optional | `library@example.com` | Verified sender email address |
 | `SMTP_SERVER` | Optional | — | SMTP host (e.g. `smtp.gmail.com`) for SMTP email dispatch |

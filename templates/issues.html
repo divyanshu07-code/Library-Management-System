@@ -79,7 +79,7 @@
                         <span class="badge badge-neutral">Returned {{ row.return_date }}</span>
                         {% if row.fine_amount > 0 %}
                             <span class="badge badge-warning" style="margin-left: 4px;">
-                                Fine: ${{ "%.2f"|format(row.fine_amount) }} (Paid)
+                                Fine: ₹{{ "%.2f"|format(row.fine_amount) }} (Paid)
                             </span>
                         {% endif %}
                     {% elif row.is_overdue %}
@@ -88,7 +88,7 @@
                         </span>
                         {% if row.current_fine > 0 %}
                             <span class="badge badge-danger" style="margin-top: 4px; display: inline-flex;">
-                                Due Fine: ${{ "%.2f"|format(row.current_fine) }}
+                                Due Fine: ₹{{ "%.2f"|format(row.current_fine) }}
                             </span>
                         {% endif %}
                     {% else %}
