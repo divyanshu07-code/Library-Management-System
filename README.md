@@ -1,167 +1,223 @@
-# 📚 Library Management System (LibraryOS)
+# LibraryOS: Library Management System
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Render-00c7b7.svg?style=for-the-badge&logo=render)](https://library-management-system-1-4v7z.onrender.com/)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Render-00c7b7.svg?logo=render)](https://library-management-system-1-4v7z.onrender.com/)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.0%2B-green.svg)](https://flask.palletsprojects.com/)
 [![SQLite](https://img.shields.io/badge/Database-SQLite3-lightgrey.svg)](https://www.sqlite.org/)
-[![Chart.js](https://img.shields.io/badge/Visualizations-Chart.js_4-orange.svg)](https://www.chartjs.org/)
+[![Chart.js](https://img.shields.io/badge/Charts-Chart.js_4-orange.svg)](https://www.chartjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> 🚀 **Live Production App**: [https://library-management-system-1-4v7z.onrender.com/](https://library-management-system-1-4v7z.onrender.com/)
+LibraryOS is a web-based library management system built with Python, Flask, and SQLite. It covers the full circulation lifecycle (cataloging, issuing, renewing, returning, and fine calculation) and adds an analytics dashboard, ISBN-based metadata lookup, automated due-date email reminders, and CSV exports.
 
-A modern, full-featured **Library Management System** engineered with **Python, Flask, and SQLite3**. Features dynamic circulation tracking, automatic overdue fine calculations, one-click loan renewals, barcode/ISBN scanning with OpenLibrary metadata synchronization, interactive Chart.js analytics, automated email reminder scheduling, and instant CSV reporting.
+**Live demo:** <https://library-management-system-1-4v7z.onrender.com/> (deployed on Render)
 
----
+> The demo runs on a free-tier host and may take a short while to wake up on the first request.
 
-## 🌟 Key Features
-
-### 📖 Catalog & Inventory Management
-- **Full Book CRUD**: Add, edit, catalog, and remove book records with ease.
-- **Barcode / Camera ISBN Scanner**: Integrated HTML5 QR/Barcode scanner using phone/webcam.
-- **Open Library API Auto-Discovery**: Enter or scan an ISBN to automatically fetch the book title, author, and high-res cover art.
-- **Categorization & Multi-Filter**: Categorize books (Fiction, Science, Classic, Technology, etc.) and filter by real-time shelf availability.
-
-### 👥 Patron & Membership Management
-- **Patron Registration & Contact Tracking**: Manage student/patron records with unique email validation.
-- **Borrowing Analytics**: Real-time counter of active loans and lifetime books borrowed per member.
-- **Integrity Safeguards**: Prevents deleting patrons who currently have unreturned books checked out.
-
-### 🔄 Circulation, Overdue Fines & One-Click Renewals
-- **Intuitive Issue Workflow**: Assign available books with customizable loan durations (7, 14, 30 days).
-- **Automated Overdue Fine Engine**: Daily calculation of overdue penalties based on calendar days elapsed past due date.
-- **One-Click Renewal**: Quickly extend loan periods (+7 days) directly from the circulation table.
-- **Return & Fine Recording**: Records return dates, computes accrued fines, and archives transaction history.
-
-### 📊 Interactive Analytics Dashboard
-- **Real-Time KPIs**: Total copies, available on-shelf count, registered patrons, active loans, overdue items, and total fines collected.
-- **Dynamic Chart.js Graphs**:
-  - *Most Borrowed Books* (Horizontal Bar Chart)
-  - *Monthly Borrowing Trends* (Smooth Line Chart with Area Fill)
-  - *Loan Status Breakdown* (Doughnut Chart: On-Time vs Overdue)
-- **Recent Activity Log**: Immediate timeline of the latest check-outs and check-ins.
-
-### 📩 Automated Due-Date Reminders
-- **Universal Multi-Provider Dispatcher**:
-  - **SendGrid API** for cloud transactional email.
-  - **Standard SMTP** (Gmail, Outlook, Amazon SES, or custom mail servers).
-  - **Simulation Mode** (gracefully logs reminders to console if API keys aren't set—ideal for local tests & recruiter demos).
-- **Web UI Trigger**: Librarians can trigger on-demand reminder jobs directly with one click from the UI.
-- **Cron / Scheduled Ready**: Can be run as a cron job, Render Cron Service, or GitHub Actions workflow.
-
-### 📥 Enterprise Reporting (CSV Export)
-- Download real-time spreadsheet exports for:
-  - Catalog inventory (`/books/export`)
-  - Member records (`/members/export`)
-  - Loan and fine ledgers (`/issues/export`)
-
-### 🎨 Modern UI & Dark Mode
-- Built with a custom design system in pure CSS (no bloated frameworks).
-- True Light & Dark mode toggle with persistent state saved in `localStorage`.
-- Fluid, responsive mobile & desktop experience.
+If you find this project useful, please consider giving it a ⭐ on [GitHub](https://github.com/divyanshu07-code/Library-Management-System). It helps others discover it and is much appreciated.
 
 ---
 
-## 📂 Project Architecture
+## Table of Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Configuration](#configuration)
+- [Email Reminders](#email-reminders)
+- [Data Export](#data-export)
+- [Deployment](#deployment)
+- [License](#license)
+
+---
+
+## Features
+
+### Catalog and Inventory
+- Create, read, update, and delete book records.
+- Add books by ISBN using a camera-based barcode scanner (HTML5, works with phone or webcam).
+- Automatic metadata lookup (title, author, cover image) through the Open Library API.
+- Category tagging and filtering, including real-time shelf availability.
+
+### Patron Management
+- Patron registration with unique email validation.
+- Per-patron counters for active loans and lifetime borrowing.
+- Referential safeguard: patrons with unreturned books cannot be deleted.
+
+### Circulation and Fines
+- Issue available books with selectable loan periods (7, 14, or 30 days).
+- One-click renewal, extending a loan by 7 days.
+- Daily overdue fine calculation based on calendar days past the due date (configurable rate).
+- Return processing that records the return date, finalizes fines, and archives the transaction.
+
+### Analytics Dashboard
+- KPIs: total copies, available copies, registered patrons, active loans, overdue items, and fines collected.
+- Charts (Chart.js):
+  - Most borrowed books (horizontal bar)
+  - Monthly borrowing trends (line with area fill)
+  - Loan status breakdown, on-time vs. overdue (doughnut)
+- Recent activity feed of the latest check-outs and check-ins.
+
+### Notifications
+- Due-date reminders through SendGrid, standard SMTP, or a simulation mode that logs messages to the console when no credentials are configured.
+- Reminders can be triggered on demand from the web UI or run on a schedule.
+
+### User Interface
+- Custom CSS design system with no external UI framework.
+- Light and dark themes, with the preference persisted in `localStorage`.
+- Responsive layout for desktop and mobile.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Python 3.10+, Flask 3 |
+| Database | SQLite 3 |
+| Frontend | Jinja2 templates, vanilla JavaScript, custom CSS |
+| Visualization | Chart.js 4 |
+| External API | Open Library |
+| Email | SendGrid API or SMTP |
+| Deployment | Gunicorn, Render / Railway (via `Procfile`) |
+
+---
+
+## Project Structure
 
 ```
-library-management-system/
-├── app.py                 # Core Flask application (routing, models, analytics, business logic)
-├── send_reminders.py       # Automated email reminder engine (SendGrid / SMTP / Simulation)
-├── requirements.txt        # Production dependencies
-├── Procfile                 # Process deployment definition for Render / Railway / Heroku
-├── .gitignore              # Ignored files (database, logs, environment variables)
+Library-Management-System/
+├── app.py               # Flask application: routes, data access, analytics, business logic
+├── send_reminders.py    # Email reminder engine (SendGrid / SMTP / simulation)
+├── requirements.txt     # Python dependencies
+├── Procfile             # Process definition for Render / Railway / Heroku
 ├── static/
-│   └── style.css          # Modern CSS design system with light/dark theme variables
+│   └── style.css        # Design system with light/dark theme variables
 └── templates/
-    ├── base.html          # Global layout, responsive navigation, flash alerts & theme toggle
-    ├── index.html         # Analytics dashboard with Chart.js visualization & activity feed
-    ├── books.html         # Book catalog table with search, category filtering & CSV export
-    ├── book_form.html     # Book entry & edit form with camera barcode scanner & ISBN lookup
-    ├── members.html       # Patron directory with borrowing metrics & CSV export
-    ├── member_form.html   # Patron registration form
-    ├── issues.html        # Circulation table with fine indicators, renewals & return controls
-    └── issue_form.html    # Book checkout form with quick loan duration presets
+    ├── base.html        # Layout, navigation, flash messages, theme toggle
+    ├── index.html       # Analytics dashboard
+    ├── books.html       # Catalog with search, filtering, and export
+    ├── book_form.html   # Add/edit book form with barcode scanner and ISBN lookup
+    ├── members.html     # Patron directory and borrowing metrics
+    ├── member_form.html # Patron registration form
+    ├── issues.html      # Circulation table with fines, renewals, and returns
+    └── issue_form.html  # Checkout form with loan-duration presets
 ```
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
-### 1. Clone & Enter Repository
+### Prerequisites
+- Python 3.10 or newer
+- Git
+
+### Installation
+
 ```bash
+# 1. Clone the repository
 git clone https://github.com/divyanshu07-code/Library-Management-System.git
-cd library-management-system
-```
+cd Library-Management-System
 
-### 2. Set Up Virtual Environment (Recommended)
-```bash
-# Windows
+# 2. Create and activate a virtual environment
 python -m venv venv
-venv\Scripts\activate
+source venv/bin/activate        # macOS / Linux
+venv\Scripts\activate           # Windows
 
-# macOS / Linux
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 3. Install Dependencies
-```bash
+# 3. Install dependencies
 pip install -r requirements.txt
-```
 
-### 4. Run Locally
-```bash
+# 4. Run the application
 python app.py
 ```
-Open **http://127.0.0.1:5000** in your browser.  
-*The SQLite database (`library.db`) is automatically initialized and pre-seeded with catalog items and sample circulation records on initial launch.*
+
+Open <http://127.0.0.1:5000> in your browser.
+
+On first launch, the SQLite database (`library.db`) is created automatically and seeded with sample catalog items and circulation records.
 
 ---
 
-## ⚙️ Environment Variables
+## Configuration
 
-| Variable | Required? | Default | Description |
+All settings are read from environment variables.
+
+| Variable | Required | Default | Description |
 |---|---|---|---|
-| `SECRET_KEY` | Production | `dev-library-secret-key-2026` | Flask session and flash messaging signing key |
-| `PORT` | Auto by Host | `5000` | Port for the web server to listen on |
-| `DAILY_FINE_RATE` | Optional | `5.0` | Overdue fee rate per day |
-| `SENDGRID_API_KEY`| Optional | — | SendGrid API key for automated reminder dispatch |
-| `SENDER_EMAIL` | Optional | `library@example.com` | Verified sender email address |
-| `SMTP_SERVER` | Optional | — | SMTP host (e.g. `smtp.gmail.com`) for SMTP email dispatch |
-| `SMTP_PORT` | Optional | `587` | Port for TLS SMTP connection |
-| `SMTP_USER` | Optional | — | SMTP username / email address |
-| `SMTP_PASSWORD` | Optional | — | SMTP app password |
-| `REMINDER_DAYS_BEFORE` | Optional | `2` | Days ahead of due date to trigger loan reminders |
+| `SECRET_KEY` | Production | `dev-library-secret-key-2026` | Signing key for sessions and flash messages. **Always override in production.** |
+| `PORT` | Set by host | `5000` | Port the web server listens on. |
+| `DAILY_FINE_RATE` | No | `5.0` | Overdue fine charged per day. |
+| `REMINDER_DAYS_BEFORE` | No | `2` | Days before the due date to send a reminder. |
+| `SENDGRID_API_KEY` | No | none | SendGrid API key. |
+| `SENDER_EMAIL` | No | `library@example.com` | Verified sender address. |
+| `SMTP_SERVER` | No | none | SMTP host, for example `smtp.gmail.com`. |
+| `SMTP_PORT` | No | `587` | SMTP port (TLS). |
+| `SMTP_USER` | No | none | SMTP username. |
+| `SMTP_PASSWORD` | No | none | SMTP password or app password. |
 
 ---
 
-## 🌐 Deployment Guide
+## Email Reminders
 
-### Deploying to Render (Recommended Free/Low-Cost Host)
-1. Fork or push this repository to your GitHub account.
-2. In [Render Dashboard](https://dashboard.render.com), click **New +** &rarr; **Web Service**.
-3. Select your repository.
-4. Configure service settings:
-   - **Environment**: `Python 3`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `gunicorn app:app` (or Render will automatically detect the `Procfile`)
-5. Click **Deploy Web Service**!
+`send_reminders.py` selects the delivery method in this order:
 
-### Deploying to Railway
-1. Click **New Project** &rarr; **Deploy from GitHub repo**.
-2. Select your repository. Railway automatically reads the `Procfile` and launches `gunicorn app:app`.
+1. **SendGrid**, if `SENDGRID_API_KEY` is set.
+2. **SMTP**, if `SMTP_SERVER` is set.
+3. **Simulation mode**, otherwise. Messages are logged to the console and nothing is sent, which is useful for local development and demos.
 
----
+Reminders can be sent in two ways:
 
-## 💼 Resume & Interview Talking Points
+- **On demand:** librarians trigger a reminder run from the web UI.
+- **Scheduled:** run the script from any scheduler, such as cron, a Render Cron Job, or a GitHub Actions workflow.
 
-- **Architectural Design**: Engineered a modular MVC-style architecture in Flask with robust SQLite foreign keys and automated schema migrations.
-- **RESTful Endpoints & Third-Party Integration**: Integrated Open Library REST API to asynchronously populate book metadata and cover art via client-side fetch.
-- **Financial & Circulation Logic**: Implemented business rules for inventory decrement/increment, loan tenure enforcement, dynamic penalty algorithms, and loan renewal state management.
-- **Observability & Analytics**: Aggregated real-time circulation metrics using SQL window/aggregation queries visualized via responsive Chart.js components.
-- **Extensible Notification Pipeline**: Designed a fallback notification pipeline supporting SendGrid API, standard TLS SMTP, and decoupled background cron execution.
+```bash
+python send_reminders.py
+```
 
 ---
 
-## 📄 License
-This project is licensed under the MIT License - feel free to use and customize for your own projects!
+## Data Export
+
+The following endpoints return CSV files:
+
+| Endpoint | Contents |
+|---|---|
+| `/books/export` | Catalog inventory |
+| `/members/export` | Patron records |
+| `/issues/export` | Loan and fine ledger |
+
+---
+
+## Deployment
+
+The reference instance is already live on Render at <https://library-management-system-1-4v7z.onrender.com/>. The steps below describe how to deploy your own copy.
+
+### Render
+
+1. Push or fork this repository to GitHub.
+2. In the [Render Dashboard](https://dashboard.render.com), choose **New +** → **Web Service** and select the repository.
+3. Configure the service:
+   - **Runtime:** Python 3
+   - **Build command:** `pip install -r requirements.txt`
+   - **Start command:** `gunicorn app:app` (detected automatically from the `Procfile`)
+4. Add the environment variables listed in [Configuration](#configuration), at minimum `SECRET_KEY`.
+5. Deploy.
+
+### Railway
+
+1. Choose **New Project** → **Deploy from GitHub repo** and select the repository.
+2. Railway reads the `Procfile` and starts `gunicorn app:app`.
+
+### Production notes
+
+- SQLite stores data in a local file. On hosts with an ephemeral filesystem (including most free tiers), data is lost on redeploy or restart unless you attach a persistent disk or migrate to a managed database.
+- Set a strong, unique `SECRET_KEY` before exposing the application publicly.
+
+---
+
+## License
+
+Released under the [MIT License](https://opensource.org/licenses/MIT).
+
+---
+
+If this project helped you, a ⭐ on the repository would be greatly appreciated.
